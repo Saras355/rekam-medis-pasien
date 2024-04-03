@@ -22,7 +22,7 @@ if selected == "Input Data Pasien":
     # Display Title and Description
     st.title("Pendataan Pasien Diabetes dan Hipertensi")
     #st.markdown("Enter the details of the new vendor below.")
-    st.write(st.secrets['connections'])
+   # st.write(st.secrets['connections'])
     # Establishing a Google Sheets connection
     conn = st.connection("gsheets", type=GSheetsConnection)
 
