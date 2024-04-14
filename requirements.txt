@@ -3,3 +3,4 @@ pandas==1.5.3
 st_gsheets_connection==0.0.4
 streamlit==1.32.2
 streamlit_option_menu==0.3.12
+streamlit_js_eval
