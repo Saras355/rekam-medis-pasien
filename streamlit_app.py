@@ -32,7 +32,7 @@ selected = option_menu(
     icons=["📝", "🔍", "🔍", "🔍"],
     menu_icon="cast",
     default_index=0,
-    orientation="vertical",
+    orientation="horizontal",
 )
 
 if selected == "Input Data Pasien":
