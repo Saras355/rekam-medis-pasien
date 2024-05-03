@@ -28,14 +28,89 @@ true_list = [False, False]
 
 selected = option_menu(
     menu_title=None,
-    options=["Input Data Pasien", "Input Data Diabetes", "Input Data Hipertensi", "Cari Rekam Medis","Dashboard Pasien"],
-    icons=["📝", "🔍", "🔍", "🔍","🔍"],
+    options=["Input Data Pasien", "Input Data Diabetes", "Input Data Hipertensi", "Cari Rekam Medis"],
+    icons=["📝", "🔍", "🔍", "🔍"],
     menu_icon="cast",
     default_index=0,
     orientation="vertical",
 )
+#Ambil data penyakit_pasien dari Google Sheets
+def tampilkan_dashboard():
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    import datetime
+
+    # Ambil data penyakit_pasien dari Google Sheets
+    existing_data = conn.read(worksheet="penyakit_pasien", usecols=list(range(11)), ttl=5)
+    existing_data = existing_data.dropna(how="all")
+
+    if not existing_data.empty:
+        # Filter data berdasarkan bulan dan tahun yang diinginkan (misalnya, bulan April 2024)
+        current_month = datetime.datetime.now().month
+        current_year = datetime.datetime.now().year
+
+        target_month = current_month - 1 # April
+        target_year = current_year
+
+        
+        existing_data["TanggalKonsul"] = pd.to_datetime(existing_data["TanggalKonsul"])
+
+        filtered_data = existing_data[(existing_data["TanggalKonsul"].dt.month == target_month) & (existing_data["TanggalKonsul"].dt.year == target_year)]
+       # st.write(filtered_data)
+        #hitung total yang diabetes
+
+        #hitung total yang hipertensi
+        if not filtered_data.empty:
+            #hitung total yang diabetes
+            total_diabetes = len(filtered_data[filtered_data["Jenis Penyakit"] == "Diabetes"])
+
+            #hitung yang hipertensi
+            total_hipertensi = len(filtered_data[filtered_data["Jenis Penyakit"] == "Hipertensi"])
+            # Filter data untuk pasien Diabetes dengan GDP/GDS antara 80-130
+            #st.write(total_hipertensi)
+            diabetes_data = filtered_data[(filtered_data["Jenis Penyakit"] == "Diabetes") & ((filtered_data["GDP"] >= 80) & (filtered_data["GDP"] <= 130) | (filtered_data["GDS"] >= 80) & (filtered_data["GDS"] <= 130))]
+            # st.write(diabetes_data)
+            if total_diabetes:
+            # Hitung persentase pasien Diabetes yang memenuhi kriteria
+                diabetes_percentage = len(diabetes_data) /total_diabetes * 100
+                # st.write(diabetes_percentage)
+            else:
+                diabetes_percentage = 0
+            # Filter data untuk pasien Hipertensi dengan TD < 140
+            filtered_data["TD"] = filtered_data["TD"].apply(lambda x: int(x.split("/")[0]) if isinstance(x, str) else x)
+            hipertensi_data = filtered_data[(filtered_data["Jenis Penyakit"] == "Hipertensi") & ((filtered_data["TD"] < 140))]
+            # st.write(hipertensi_data)
+            if total_hipertensi:
+                # Hitung persentase pasien Hipertensi yang memenuhi kriteria
+                hipertensi_percentage = len(hipertensi_data) / total_hipertensi * 100
+                
+                # st.write(hipertensi_percentage)
+            else:
+                hipertensi_percentage = 0
+            # Tampilkan hasil dalam bentuk grafik
+         #   st.markdown(f"**Capaian untuk bulan {target_month} tahun {target_year} :**")
+            st.write(f"**Persentase Pasien yang Memenuhi Kriteria di Bulan {target_month}/{target_year}:**")
+
+            columns = st.columns(2)
+
+            if total_diabetes:
+                columns[0].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>{diabetes_percentage:.2f}%</div>", unsafe_allow_html=True)
+                columns[0].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Diabetes dengan GDP/GDS 80-130</div>", unsafe_allow_html=True)
+            else:
+                columns[0].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'> -- </div>", unsafe_allow_html=True)
+                columns[0].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Diabetes dengan GDP/GDS 80-130</div>", unsafe_allow_html=True)
+
+            if total_hipertensi:
+                columns[1].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>{hipertensi_percentage:.2f}%</div>", unsafe_allow_html=True)
+                columns[1].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Hipertensi dengan TDS < 140</div>", unsafe_allow_html=True)
+            else:
+                columns[1].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'> --- </div>", unsafe_allow_html=True)
+                columns[1].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Hipertensi dengan TDS < 140</div>", unsafe_allow_html=True)
+    st.write()
 
 if selected == "Input Data Pasien":
+    tampilkan_dashboard()
+    st.write()
+    st.write()
     st.title("Pendataan Pasien Diabetes dan Hipertensi")
     
     # Establishing a Google Sheets connection
@@ -44,7 +119,7 @@ if selected == "Input Data Pasien":
     # Fetch existing pasien data
     existing_pasien_data = conn.read(worksheet="data_pasien", usecols=list(range(2)), ttl=5)
     existing_pasien_data = existing_pasien_data.dropna(how="all")
-    
+   
     with st.form(key="pasien_form", clear_on_submit=True):
         st.write("Formulir Data Pasien:")
         nama = st.text_input("Nama*")
@@ -116,8 +191,14 @@ if selected == "Input Data Pasien":
             st.success("Data pasien berhasil disubmit!")
 
 elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
+    tampilkan_dashboard()
+    st.write()
 
-    
+   
+    st.write()
+    st.write()
+    st.title("Input Data Diabetes dan Hipertensi")
+
     jenis_penyakit = "Diabetes" if selected == "Input Data Diabetes" else "Hipertensi"
     
     # Establishing a Google Sheets connection
@@ -304,80 +385,9 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
     form3()
     form_final()
 
-elif selected == "Dashboard Pasien":
+# elif selected == "Dashboard Pasien":
 #    st.write("haloo")
-    #Ambil data penyakit_pasien dari Google Sheets
-    conn = st.connection("gsheets", type=GSheetsConnection)
-    import datetime
-
-    # Ambil data penyakit_pasien dari Google Sheets
-    existing_data = conn.read(worksheet="penyakit_pasien", usecols=list(range(11)), ttl=5)
-    existing_data = existing_data.dropna(how="all")
-
-    if not existing_data.empty:
-        # Filter data berdasarkan bulan dan tahun yang diinginkan (misalnya, bulan April 2024)
-        current_month = datetime.datetime.now().month
-        current_year = datetime.datetime.now().year
-
-        target_month = current_month - 1 # April
-        target_year = current_year
-
-        
-        existing_data["TanggalKonsul"] = pd.to_datetime(existing_data["TanggalKonsul"])
-
-        filtered_data = existing_data[(existing_data["TanggalKonsul"].dt.month == target_month) & (existing_data["TanggalKonsul"].dt.year == target_year)]
-       # st.write(filtered_data)
-        #hitung total yang diabetes
-
-        #hitung total yang hipertensi
-        if not filtered_data.empty:
-            #hitung total yang diabetes
-            total_diabetes = len(filtered_data[filtered_data["Jenis Penyakit"] == "Diabetes"])
-
-            #hitung yang hipertensi
-            total_hipertensi = len(filtered_data[filtered_data["Jenis Penyakit"] == "Hipertensi"])
-            # Filter data untuk pasien Diabetes dengan GDP/GDS antara 80-130
-            #st.write(total_hipertensi)
-            diabetes_data = filtered_data[(filtered_data["Jenis Penyakit"] == "Diabetes") & ((filtered_data["GDP"] >= 80) & (filtered_data["GDP"] <= 130) | (filtered_data["GDS"] >= 80) & (filtered_data["GDS"] <= 130))]
-            # st.write(diabetes_data)
-            if total_diabetes:
-            # Hitung persentase pasien Diabetes yang memenuhi kriteria
-                diabetes_percentage = len(diabetes_data) /total_diabetes * 100
-                # st.write(diabetes_percentage)
-            else:
-                diabetes_percentage = 0
-            # Filter data untuk pasien Hipertensi dengan TD < 140
-            filtered_data["TD"] = filtered_data["TD"].apply(lambda x: int(x.split("/")[0]) if isinstance(x, str) else x)
-            hipertensi_data = filtered_data[(filtered_data["Jenis Penyakit"] == "Hipertensi") & ((filtered_data["TD"] < 140))]
-            # st.write(hipertensi_data)
-            if total_hipertensi:
-                # Hitung persentase pasien Hipertensi yang memenuhi kriteria
-                hipertensi_percentage = len(hipertensi_data) / total_hipertensi * 100
-                
-                # st.write(hipertensi_percentage)
-            else:
-                hipertensi_percentage = 0
-            # Tampilkan hasil dalam bentuk grafik
-         #   st.markdown(f"**Capaian untuk bulan {target_month} tahun {target_year} :**")
-            st.write(f"**Persentase Pasien yang Memenuhi Kriteria di Bulan {target_month}/{target_year}:**")
-
-            columns = st.columns(2)
-
-            if total_diabetes:
-                columns[0].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>{diabetes_percentage:.2f}%</div>", unsafe_allow_html=True)
-                columns[0].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Diabetes dengan GDP/GDS 80-130</div>", unsafe_allow_html=True)
-            else:
-                columns[0].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'> -- </div>", unsafe_allow_html=True)
-                columns[0].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Diabetes dengan GDP/GDS 80-130</div>", unsafe_allow_html=True)
-
-            if total_hipertensi:
-                columns[1].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>{hipertensi_percentage:.2f}%</div>", unsafe_allow_html=True)
-                columns[1].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Hipertensi dengan TDS < 140</div>", unsafe_allow_html=True)
-            else:
-                columns[1].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'> --- </div>", unsafe_allow_html=True)
-                columns[1].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Hipertensi dengan TDS < 140</div>", unsafe_allow_html=True)
-
-
+    
             # if total_diabetes:
             #     st.write(f"<span style='font-size:24px'>{diabetes_percentage:.2f}%</span>", unsafe_allow_html=True)
             #     st.write(f"Pasien Diabetes")
@@ -410,16 +420,18 @@ elif selected == "Dashboard Pasien":
            
             
 
-        else:
-            st.warning(f"Tidak ada data tersedia untuk bulan {target_month}, {target_year}.")
-    else:
-        st.warning("Tidak ada data tersedia untuk ditampilkan.")
+    #     else:
+    #         st.warning(f"Tidak ada data tersedia untuk bulan {target_month}, {target_year}.")
+    # else:
+    #     st.warning("Tidak ada data tersedia untuk ditampilkan.")
 
 
 elif selected == "Cari Rekam Medis":
+    tampilkan_dashboard()
+    st.write()
     # Implementasi fitur pencarian rekam medis di sini
     # Display Title and Description
-    st.title("Pendataan Pasien Diabetes dan Hipertensi")
+    st.title("Pencarian Pasien Diabetes dan Hipertensi")
     #st.markdown("Enter the details of the new vendor below.")
     # st.write(st.secrets['connections'])
     # Establishing a Google Sheets connection
@@ -431,7 +443,7 @@ elif selected == "Cari Rekam Medis":
     with st.form(key="filter_form", clear_on_submit= True):
         filter_name = st.text_input(label="Masukkan nama pasien yang dicari")
         filter_name = filter_name.lower()
-        filter_no_erm = st.text_input(label="Masukkan NoERM pasien yang dicari")
+        filter_no_erm = st.text_input(label="Masukkan NoERM pasien yang dicari") + "x"
         #filter_no_erm = float(filter_no_erm)
         filter_button = st.form_submit_button(label="Cari")
 
@@ -444,7 +456,7 @@ elif selected == "Cari Rekam Medis":
 
     # filtered_data = existing_data[(existing_data["Nama"].str.contains(filter_name)) and (existing_data["NoERM"].str.contains(filter_no_erm))]
         filtered_data = existing_data[(existing_data["Nama"].str.contains(filter_name)) &(existing_data["NoERM"].astype(str).str.contains(filter_no_erm))]
-        filtered_data = filtered_data.sort_values(by="TanggalLab", ascending=False).head(7)
+        filtered_data = filtered_data.sort_values(by="TanggalKonsul", ascending=False).head(7)
     #filtered_data = existing_data[(existing_data["Nama"].str.contains(filter_name))]
         #filtered_data = existing_data[(existing_data["NoERM"].astype(str).str.contains(filter_no_erm))]
         # Display existing vendors data filtered by company_name
@@ -459,12 +471,12 @@ elif selected == "Cari Rekam Medis":
                 plt.figure(figsize=(10, 6))
 
                 # Plot GDP
-                plt.plot(filtered_data["TanggalLab"], filtered_data["GDP"], marker='o', color='blue', label='GDP')
+                plt.plot(filtered_data["TanggalKonsul"], filtered_data["GDP"], marker='o', color='blue', label='GDP')
                 
                 # Plot GDS
-                plt.plot(filtered_data["TanggalLab"], filtered_data["GDS"], marker='o', color='green', label='GDS')
+                plt.plot(filtered_data["TanggalKonsul"], filtered_data["GDS"], marker='o', color='green', label='GDS')
 
-                plt.xlabel("Tanggal Lab")
+                plt.xlabel("Tanggal Konsul")
                 plt.ylabel("Nilai")
                 #plt.title("Years in Business Over Time (Filtered)")
                 plt.xticks(rotation=45)
@@ -481,12 +493,12 @@ elif selected == "Cari Rekam Medis":
                 plt.figure(figsize=(10, 6))
 
                 # Plot GDP
-                plt.plot(filtered_data["TanggalLab"], filtered_data["GDP"], marker='o', color='blue', label='GDP')
+                plt.plot(filtered_data["TanggalKonsul"], filtered_data["GDP"], marker='o', color='blue', label='GDP')
                 
                 # Plot GDS
-                plt.plot(filtered_data["TanggalLab"], filtered_data["TD"], marker='o', color='green', label='GDS')
+                plt.plot(filtered_data["TanggalKonsul"], filtered_data["TD"], marker='o', color='green', label='GDS')
 
-                plt.xlabel("Tanggal Lab")
+                plt.xlabel("Tanggal Konsul")
                 plt.ylabel("Nilai")
                 #plt.title("Years in Business Over Time (Filtered)")
                 plt.xticks(rotation=45)
