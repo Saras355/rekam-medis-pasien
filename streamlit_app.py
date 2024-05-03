@@ -28,8 +28,8 @@ true_list = [False, False]
 
 selected = option_menu(
     menu_title=None,
-    options=["Input Data Pasien", "Input Data Diabetes", "Input Data Hipertensi", "Cari Rekam Medis"],
-    icons=["📝", "🔍", "🔍", "🔍"],
+    options=["Input Data Pasien", "Input Data Diabetes", "Input Data Hipertensi", "Cari Rekam Medis","Dashboard Pasien"],
+    icons=["📝", "🔍", "🔍", "🔍","🔍"],
     menu_icon="cast",
     default_index=0,
     orientation="vertical",
@@ -50,6 +50,7 @@ if selected == "Input Data Pasien":
         nama = st.text_input("Nama*")
         nama = nama.lower()
         no_erm = st.text_input("No eRM*", help="Harap isi dengan nomor pasien yang unik.")
+        tempat_lahir = st.text_input("Tempat Lahir*")
         tanggal_lahir = st.text_input("Tanggal Lahir* (DD-MM-YYYY)")
         jenis_kelamin = st.selectbox("Jenis Kelamin*", ["Laki-laki", "Perempuan"])
         no_telepon = st.text_input("No Telepon*", placeholder="(08xxxxxxxxxx)")
@@ -57,7 +58,7 @@ if selected == "Input Data Pasien":
         
         if submit_button:
             # Validasi
-            if not (nama and no_erm and tanggal_lahir and jenis_kelamin and no_telepon):
+            if not (nama and no_erm and tempat_lahir and tanggal_lahir and jenis_kelamin and no_telepon):
                 st.warning("Harap isi semua kolom yang diperlukan.")
                 st.stop()
                 
@@ -66,7 +67,7 @@ if selected == "Input Data Pasien":
                 tanggal_lahir = datetime.datetime.strptime(tanggal_lahir, "%d-%m-%Y")
             except ValueError:
                 st.warning("Tanggal lahir harus dalam format DD-MM-YYYY.")
-                st.stop()
+                # st.stop()
             
             # Validasi nomor telepon harus angka
             # try:
@@ -80,7 +81,7 @@ if selected == "Input Data Pasien":
                 return any(phone_number.startswith(prefix) for prefix in valid_prefixes)
 
             # Masukkan nomor telepon dari pengguna
-            no_telepon = st.text_input("Nomor Telepon")
+            # no_telepon = st.text_input("Nomor Telepon")
 
             # Validasi nomor telepon
             if not no_telepon:
@@ -101,7 +102,8 @@ if selected == "Input Data Pasien":
             pasien_data = pd.DataFrame(
                 {
                     "Nama": [nama],
-                    "NoERM": [no_erm],
+                    "NoERM": [no_erm + 'x'],
+                    "TempatLahir": [tempat_lahir],  
                     "TanggalLahir": [tanggal_lahir.strftime("%Y-%m-%d")],
                     "JenisKelamin": [jenis_kelamin],
                     "NoTelepon": [no_telepon]
@@ -159,7 +161,9 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
             if submit_button:
                 st.session_state.my_variable_state += 1
                 if st.no_erm_input:
-                    nama_pasien = existing_pasien_data.loc[existing_pasien_data["NoERM"] == st.no_erm_input, "Nama"].values
+                    # nama_pasien = existing_pasien_data.loc[existing_pasien_data["NoERM"] == st.no_erm_input, "Nama"].values
+                    nama_pasien = existing_pasien_data.loc[existing_pasien_data["NoERM"].str.rstrip("x") == st.no_erm_input, "Nama"].values
+
                 if nama_pasien:
                     st.write(f"Nama Pasien: {nama_pasien[0]}")
                     
@@ -178,12 +182,12 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
                 st.write("**Langkah 2. Masukkan data dokter dan tanggal konsultasi dan lab**")
                 st.tanggal_lab = st.date_input("Tanggal Lab*")
                 st.dokter = st.selectbox("Dokter*", ["dr. I Made Sugiana, M. Kes", "dr. I Gusti Ayu Agung Dyah Utari", "dr. I Nyoman Gita Jaya", "dr. Nilam Rasa Surma", "dr. Pande Pt. Dodi Martana", "dr. Nil Luh Yuni Wiandari", "dr. Asri Wedhari", "dr. Ni Komang Ayu Trisya Mega Yani", "Dokter Internship"])
-                st.tanggal_konsul = st.date_input("Tanggal Konsultasi*")
+                #st.tanggal_konsul = st.date_input("Tanggal Konsultasi*")
 
                 # Lanjut dengan mengisi formulir khusus diabetes atau hipertensi
                 if jenis_penyakit == "Diabetes":
-                    st.gdp = st.text_input("GDP*")
-                    st.gds = st.text_input("GDS*")
+                    st.gdp = st.text_input("GDP") #krn ada kemungkinan dia ga puasa 
+                    st.gds = st.text_input("GDS")
                     st.selected_obat = st.selectbox("Pilih Obat", list(obat_options.keys()))
                     
                 else:
@@ -198,9 +202,13 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
                     st.session_state.my_variable_state2 += 1
                     
                     if jenis_penyakit == "Diabetes":
-                        if not(st.gdp and st.gds):
-                            st.warning("Harap isi semua kolom yang diperlukan.")
-                            st.stop()
+                        # if not(st.gdp and st.gds):
+                        #     st.warning("Harap isi semua kolom yang diperlukan.")
+                        #     st.stop()
+                        if not st.gdp:
+                            st.gdp = 0.0
+                        if not st.gds:
+                            st.gds = 0.0
                         try:
                             st.gdp = float(st.gdp)
                             st.gds = float(st.gds)
@@ -235,9 +243,11 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
     def form_final():
         
         if st.session_state.my_variable_state3 >= 1:
-            st.pasien_data = existing_pasien_data.loc[existing_pasien_data["NoERM"] == st.no_erm_input].iloc[0]
+            print("la: " + st.no_erm_input)
+            print("du:" + existing_pasien_data["NoERM"])
+            st.pasien_data = existing_pasien_data.loc[existing_pasien_data["NoERM"] == st.no_erm_input+"x"].iloc[0]
             
-            existing_data_pasien_penyakit = conn.read(worksheet="penyakit_pasien", usecols=list(range(11)), ttl=5)
+            existing_data_pasien_penyakit = conn.read(worksheet="penyakit_pasien", usecols=list(range(10)), ttl=5)
             existing_data_pasien_penyakit = existing_data_pasien_penyakit.dropna(how="all")
             if st.session_state.my_variable_state3 >= 1:
                 with st.form (key = "form_final", clear_on_submit= True):
@@ -250,14 +260,14 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
                             {
                                 "Nama": [st.pasien_data["Nama"]],
                                 "NoERM": [st.pasien_data["NoERM"]],
-                                "TanggalLab": [st.tanggal_lab.strftime("%Y-%m-%d")],
+                                "TanggalKonsul": [st.tanggal_lab.strftime("%Y-%m-%d")],
                                 "GDP": [st.gdp],
                                 "GDS": [st.gds],
                                 "Obat" : [st.selected_obat],
                                 "Dosis" : [st.selected_dosis],
                                 "TD": None,
                                 "Dokter": [st.dokter],
-                                "TanggalKonsul": [st.tanggal_konsul.strftime("%Y-%m-%d")],
+                               # "TanggalKonsul": [st.tanggal_konsul.strftime("%Y-%m-%d")],
                                 "Jenis Penyakit": [jenis_penyakit],
                             }
                         )
@@ -266,14 +276,14 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
                             {
                                 "Nama": [st.pasien_data["Nama"]],
                                 "NoERM": [st.pasien_data["NoERM"]],
-                                "TanggalLab": [st.tanggal_konsul.strftime("%Y-%m-%d")],
+                                "TanggalKonsul": [st.tanggal_lab.strftime("%Y-%m-%d")],
                                 "GDP": None,
                                 "GDS": None,
                                 "Obat" : [st.selected_obat_hipertensi],
                                 "Dosis" : [st.selected_dosis_hipertensi],
                                 "TD": f"{st.td_sistol}/{st.td_diastol}",
                                 "Dokter": [st.dokter],
-                                "TanggalKonsul": [st.tanggal_konsul.strftime("%Y-%m-%d")],
+                              #  "TanggalKonsul": [st.tanggal_konsul.strftime("%Y-%m-%d")],
                                 "Jenis Penyakit": [jenis_penyakit]
                             }
                         )
@@ -293,6 +303,119 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
     form2()
     form3()
     form_final()
+
+elif selected == "Dashboard Pasien":
+#    st.write("haloo")
+    #Ambil data penyakit_pasien dari Google Sheets
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    import datetime
+
+    # Ambil data penyakit_pasien dari Google Sheets
+    existing_data = conn.read(worksheet="penyakit_pasien", usecols=list(range(11)), ttl=5)
+    existing_data = existing_data.dropna(how="all")
+
+    if not existing_data.empty:
+        # Filter data berdasarkan bulan dan tahun yang diinginkan (misalnya, bulan April 2024)
+        current_month = datetime.datetime.now().month
+        current_year = datetime.datetime.now().year
+
+        target_month = current_month - 1 # April
+        target_year = current_year
+
+        
+        existing_data["TanggalKonsul"] = pd.to_datetime(existing_data["TanggalKonsul"])
+
+        filtered_data = existing_data[(existing_data["TanggalKonsul"].dt.month == target_month) & (existing_data["TanggalKonsul"].dt.year == target_year)]
+       # st.write(filtered_data)
+        #hitung total yang diabetes
+
+        #hitung total yang hipertensi
+        if not filtered_data.empty:
+            #hitung total yang diabetes
+            total_diabetes = len(filtered_data[filtered_data["Jenis Penyakit"] == "Diabetes"])
+
+            #hitung yang hipertensi
+            total_hipertensi = len(filtered_data[filtered_data["Jenis Penyakit"] == "Hipertensi"])
+            # Filter data untuk pasien Diabetes dengan GDP/GDS antara 80-130
+            #st.write(total_hipertensi)
+            diabetes_data = filtered_data[(filtered_data["Jenis Penyakit"] == "Diabetes") & ((filtered_data["GDP"] >= 80) & (filtered_data["GDP"] <= 130) | (filtered_data["GDS"] >= 80) & (filtered_data["GDS"] <= 130))]
+            # st.write(diabetes_data)
+            if total_diabetes:
+            # Hitung persentase pasien Diabetes yang memenuhi kriteria
+                diabetes_percentage = len(diabetes_data) /total_diabetes * 100
+                # st.write(diabetes_percentage)
+            else:
+                diabetes_percentage = 0
+            # Filter data untuk pasien Hipertensi dengan TD < 140
+            filtered_data["TD"] = filtered_data["TD"].apply(lambda x: int(x.split("/")[0]) if isinstance(x, str) else x)
+            hipertensi_data = filtered_data[(filtered_data["Jenis Penyakit"] == "Hipertensi") & ((filtered_data["TD"] < 140))]
+            # st.write(hipertensi_data)
+            if total_hipertensi:
+                # Hitung persentase pasien Hipertensi yang memenuhi kriteria
+                hipertensi_percentage = len(hipertensi_data) / total_hipertensi * 100
+                
+                # st.write(hipertensi_percentage)
+            else:
+                hipertensi_percentage = 0
+            # Tampilkan hasil dalam bentuk grafik
+         #   st.markdown(f"**Capaian untuk bulan {target_month} tahun {target_year} :**")
+            st.write(f"**Persentase Pasien yang Memenuhi Kriteria di Bulan {target_month}/{target_year}:**")
+
+            columns = st.columns(2)
+
+            if total_diabetes:
+                columns[0].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>{diabetes_percentage:.2f}%</div>", unsafe_allow_html=True)
+                columns[0].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Diabetes dengan GDP/GDS 80-130</div>", unsafe_allow_html=True)
+            else:
+                columns[0].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'> -- </div>", unsafe_allow_html=True)
+                columns[0].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Diabetes dengan GDP/GDS 80-130</div>", unsafe_allow_html=True)
+
+            if total_hipertensi:
+                columns[1].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>{hipertensi_percentage:.2f}%</div>", unsafe_allow_html=True)
+                columns[1].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Hipertensi dengan TDS < 140</div>", unsafe_allow_html=True)
+            else:
+                columns[1].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'> --- </div>", unsafe_allow_html=True)
+                columns[1].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Hipertensi dengan TDS < 140</div>", unsafe_allow_html=True)
+
+
+            # if total_diabetes:
+            #     st.write(f"<span style='font-size:24px'>{diabetes_percentage:.2f}%</span>", unsafe_allow_html=True)
+            #     st.write(f"Pasien Diabetes")
+            # else:
+            #     st.write("-")
+
+            # if total_hipertensi:
+            #     st.write(f"<span style='font-size:24px'>{hipertensi_percentage:.2f}%</span>", unsafe_allow_html=True)
+            #     st.write(f"Pasien Hipertensi")
+            # else:
+            #     st.write("-")
+            # if total_diabetes:
+            #     st.markdown(f"- Besar persentase pasien Diabetes yang memenuhi kriteria: {diabetes_percentage}% dari {total_diabetes} total pasien Diabetes.")
+            # else:
+            #     st.markdown("- Tidak ada data tersedia untuk pasien Diabetes.")
+                    
+            # if total_hipertensi:
+            #     st.markdown(f"- Besar persentase pasien Hipertensi yang memenuhi kriteria sebanyak {hipertensi_percentage}% dari {total_hipertensi} total pasien Hipertensi.")
+            # else: 
+            #     st.markdown("- Tidak ada data tersedia untuk pasien Hipertensi.")
+
+            # plt.figure(figsize=(4, 4))
+            # plt.bar(["Diabetes", "Hipertensi"], [diabetes_percentage, hipertensi_percentage], color=['blue', 'green'])
+            # plt.xlabel("Jenis Penyakit")
+            # plt.ylabel("Persentase Pasien (%)")
+            # plt.title(f"Persentase Pasien yang Memenuhi Kriteria di Bulan {target_month}/{target_year}")
+            # plt.ylim(0, 100)
+            # plt.show()
+            # st.pyplot(plt)
+           
+            
+
+        else:
+            st.warning(f"Tidak ada data tersedia untuk bulan {target_month}, {target_year}.")
+    else:
+        st.warning("Tidak ada data tersedia untuk ditampilkan.")
+
+
 elif selected == "Cari Rekam Medis":
     # Implementasi fitur pencarian rekam medis di sini
     # Display Title and Description
