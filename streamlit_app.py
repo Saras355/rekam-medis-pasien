@@ -245,7 +245,7 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
                     # nama_pasien = existing_pasien_data.loc[existing_pasien_data["NoERM"] == st.no_erm_input, "Nama"].values
                     nama_pasien = existing_pasien_data.loc[existing_pasien_data["NoERM"].str.rstrip("x") == st.no_erm_input, "Nama"].values
 
-                if nama_pasien:
+                if nama_pasien[0]:
                     st.write(f"Nama Pasien: {nama_pasien[0]}")
                     
                     #st.write(submit_button)
