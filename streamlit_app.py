@@ -169,6 +169,7 @@ if selected == "Input Data Pasien":
                 st.warning("Nomor telepon harus dimulai dengan angka 08.")
                 st.stop()
             # Validasi NoERM unik
+            no_erm = no_erm + "x"
             if no_erm in existing_pasien_data["NoERM"].values:
                 st.warning("Nomor pasien sudah ada dalam basis data. Harap masukkan nomor pasien yang unik.")
                 st.stop()
