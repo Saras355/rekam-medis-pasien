@@ -120,7 +120,7 @@ if selected == "Input Data Pasien":
     existing_pasien_data = conn.read(worksheet="data_pasien", usecols=list(range(2)), ttl=5)
     existing_pasien_data = existing_pasien_data.dropna(how="all")
    
-    with st.form(key="pasien_form", clear_on_submit=True):
+    with st.form(key="pasien_form", clear_on_submit=False):
         st.write("Formulir Data Pasien:")
         nama = st.text_input("Nama*")
         nama = nama.lower()
@@ -230,7 +230,7 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
     existing_pasien_data = conn.read(worksheet="data_pasien", usecols=list(range(2)), ttl=5)
     existing_pasien_data = existing_pasien_data.dropna(how="all")
     def form1():
-        with st.form(key ="data_form", clear_on_submit= True):
+        with st.form(key ="data_form", clear_on_submit= False):
             verif_data = None
         
             
@@ -260,7 +260,7 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
                     st.stop()
     def form2():
         if st.session_state.my_variable_state >= 1:
-            with st.form(key="data_form2", clear_on_submit= True):
+            with st.form(key="data_form2", clear_on_submit= False):
                 st.write("**Langkah 2. Masukkan data dokter dan tanggal konsultasi dan lab**")
                 st.tanggal_lab = st.date_input("Tanggal Lab*")
                 st.dokter = st.selectbox("Dokter*", ["dr. I Made Sugiana, M. Kes", "dr. I Gusti Ayu Agung Dyah Utari", "dr. I Nyoman Gita Jaya", "dr. Nilam Rasa Surma", "dr. Pande Pt. Dodi Martana", "dr. Nil Luh Yuni Wiandari", "dr. Asri Wedhari", "dr. Ni Komang Ayu Trisya Mega Yani", "Dokter Internship"])
@@ -308,7 +308,7 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
     def form3():
         if st.session_state.my_variable_state2 >= 1:
             
-            with st.form("data_form3", clear_on_submit= True):      
+            with st.form("data_form3", clear_on_submit= False):      
                 st.write("**Langkah 3. Masukkan dosis**")    
                 if jenis_penyakit == "Diabetes":
                     st.selected_dosis = st.selectbox(f"Pilih Dosis {st.selected_obat}", obat_options[st.selected_obat])
@@ -332,7 +332,7 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
             existing_data_pasien_penyakit = conn.read(worksheet="penyakit_pasien", usecols=list(range(10)), ttl=5)
             existing_data_pasien_penyakit = existing_data_pasien_penyakit.dropna(how="all")
             if st.session_state.my_variable_state3 >= 1:
-                with st.form (key = "form_final", clear_on_submit= True):
+                with st.form (key = "form_final", clear_on_submit= False):
                     st.write("**Langkah 4. Submit Data Final**")
                     st.write("Pastikan semua data sudah benar sebelum melanjutkan.")
                     st.write("Anda bisa mengganti isi data dengan klik submit pada langkah sebelumnya.")
