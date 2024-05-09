@@ -120,7 +120,7 @@ if selected == "Input Data Pasien":
     existing_pasien_data = conn.read(worksheet="data_pasien", usecols=list(range(2)), ttl=5)
     existing_pasien_data = existing_pasien_data.dropna(how="all")
    
-    with st.form(key="pasien_form", clear_on_submit=False):
+    with st.form(key="pasien_form", clear_on_submit=True):
         st.write("Formulir Data Pasien:")
         nama = st.text_input("Nama*")
         nama = nama.lower()
