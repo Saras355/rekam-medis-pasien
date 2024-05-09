@@ -6,6 +6,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from streamlit_option_menu import option_menu
 from streamlit_js_eval import streamlit_js_eval
+from dateutil.relativedelta import relativedelta
+import plotly.express as px
+
 
 
 st.set_page_config(
@@ -70,6 +73,9 @@ def tampilkan_dashboard():
     current_year = datetime.datetime.now().year
 
     target_month = current_month - 1 # April
+    if target_month == 0:
+        target_month = 12  # Ubah target_month menjadi Desember
+        target_year -= 1 
     target_year = current_year
 
     
@@ -145,7 +151,7 @@ if selected == "Input Data Pasien":
         st.write("Formulir Data Pasien:")
         nama = st.text_input("Nama*")
         nama = nama.lower()
-        no_erm = st.text_input("No eRM*", help="Harap isi dengan nomor pasien yang unik.")
+        no_erm = st.text_input("No eRM*", help="Harap isi dengan nomor pasien yang unik.").strip()
         tempat_lahir = st.text_input("Tempat Lahir*")
         tanggal_lahir = st.text_input("Tanggal Lahir* (DD-MM-YYYY)")
         jenis_kelamin = st.selectbox("Jenis Kelamin*", ["Laki-laki", "Perempuan"])
@@ -192,8 +198,8 @@ if selected == "Input Data Pasien":
                 st.stop()
             # Validasi NoERM unik
             no_erm = no_erm + "x"
-            # #st.write(no_erm)
-            # #st.write(existing_pasien_data["NoERM"].values)
+            # st.write(no_erm)
+            # st.write(existing_pasien_data["NoERM"].values)
             if no_erm in existing_pasien_data["NoERM"].values:
                 st.warning("Nomor pasien sudah ada dalam basis data. Harap masukkan nomor pasien yang unik.")
                 st.stop()
@@ -265,8 +271,7 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
             
             st.write(f"Formulir {jenis_penyakit}:")
             st.write("**Langkah 1. Masukkan No eRM Pasien**")
-            st.no_erm_input = st.text_input("No eRM*", help="Masukkan NoERM pasien.")
-            
+            st.no_erm_input = st.text_input("No eRM*", help="Masukkan NoERM pasien.").strip()            
             nama_pasien = None
             submit_button = st.form_submit_button("Submit Langkah 1")
             if submit_button:
@@ -514,7 +519,20 @@ elif selected == "Cari Rekam Medis":
     #         st.info("Data tidak tersedia untuk filter yang diberikan.")
 
 
+    def create_hover_text(row):
+        hover_text = f"Obat 1: {row['Obat']}<br>Dosis 1: {row['Dosis']}<br>"
+        if not pd.isnull(row['Obat2']) and not pd.isnull(row['Dosis2']):
+            hover_text += f"Obat 2: {row['Obat2']}<br>Dosis 2: {row['Dosis2']}"
+        return hover_text
+    
 
+    def create_hover_text_diabetes(row):
+        hover_text_diabetes = f"Obat 1: {row['Obat']}<br>Dosis 1: {row['Dosis']}<br>"
+        if not pd.isnull(row['Obat2']) and not pd.isnull(row['Dosis2']):
+            hover_text_diabetes += f"Obat 2: {row['Obat2']}<br>Dosis 2: {row['Dosis2']}"
+        if not pd.isnull(row['GDS']):
+            hover_text_diabetes += f"GDS: {row['GDS']}"
+        return hover_text_diabetes
     tampilkan_dashboard()
     st.write()
     # Implementasi fitur pencarian rekam medis di sini
@@ -526,12 +544,18 @@ elif selected == "Cari Rekam Medis":
     conn = st.connection("gsheets", type=GSheetsConnection)
 
     # Fetch existing vendors data
-    existing_data = conn.read( worksheet="penyakit_pasien", usecols=list(range(11)), ttl=5)
+    existing_data = conn.read( worksheet="penyakit_pasien", usecols=list(range(12)), ttl=5)
     existing_data = existing_data.dropna(how="all")
     with st.form(key="filter_form", clear_on_submit= True):
         filter_name = st.text_input(label="Masukkan nama pasien yang dicari")
         filter_name = filter_name.lower()
-        filter_no_erm = st.text_input(label="Masukkan NoERM pasien yang dicari") + "x"
+        filter_no_erm = st.text_input(label="Masukkan NoERM pasien yang dicari").strip() + "x"
+
+
+
+
+
+
         #filter_no_erm = float(filter_no_erm)
         filter_button = st.form_submit_button(label="Cari")
 
@@ -552,48 +576,156 @@ elif selected == "Cari Rekam Medis":
         #filtered_data = str(filtered_data["GDP"])
         st.write(filtered_data)
 
-        if filtered_data['Jenis Penyakit'].iloc[0] == "Diabetes":
-            # Line chart based on filtered data
-            if not filtered_data.empty:
-               # st.subheader("Years in Business Over Time (Filtered)")
-                plt.figure(figsize=(10, 6))
+        # Split data based on disease
+        diabetes_data = filtered_data[filtered_data["Jenis Penyakit"] == "Diabetes"]
+        hipertensi_data = filtered_data[filtered_data["Jenis Penyakit"] == "Hipertensi"]
 
-                # Plot GDP
-                plt.plot(filtered_data["TanggalKonsul"], filtered_data["GDP"], marker='o', color='blue', label='GDP')
+        #filtered hanya ambil yang tanggalnya terbaru -> 4 bulan terakhir
+
+        #kode buat ambil bulan ini
+        # Filter data berdasarkan bulan dan tahun yang diinginkan (misalnya, bulan April 2024)
+        current_month = datetime.datetime.now().month
+        current_year = datetime.datetime.now().year
+
+        #target motnhnya dalam rentang waktu 4 bulan terakhir
+        diabetes_data['TanggalKonsul'] = pd.to_datetime(diabetes_data['TanggalKonsul'])
+        hipertensi_data['TanggalKonsul'] = pd.to_datetime(hipertensi_data['TanggalKonsul'])
+        # target_month = current_month - 1 
+        four_months_ago = datetime.datetime.now() - relativedelta(months=3, days=datetime.datetime.now().day-1)
+
+
+
+
+        target_year = current_year
+        # if target_month == 0:
+        #     target_month = 12  
+        #     target_year -= 1 
+        # #filtered baik utnuk data diabetes dan hipertensi based dari target_month dan target_year
+        diabetes_data = diabetes_data[(diabetes_data["TanggalKonsul"] >= four_months_ago) & (diabetes_data["TanggalKonsul"].dt.year == datetime.datetime.now().year)]
+        hipertensi_data = hipertensi_data[(hipertensi_data["TanggalKonsul"] >= four_months_ago) & (hipertensi_data["TanggalKonsul"].dt.year == datetime.datetime.now().year)]
+
+
+        #buat tooltip
+        hipertensi_data['hover_text'] = hipertensi_data.apply(create_hover_text, axis=1)
+        #diabetes_data['hover_text'] = diabetes_data.apply(create_hover_text, axis=1)
+
+        #buat graph dulu untuk dibates 
+        # Plotting data diabetes
+        # if not diabetes_data.empty:
+        #     #st.write(diabetes_data)
+        #     st.subheader("Grafik Data Diabetes")
+        #     fig_diabetes = px.scatter(diabetes_data, x="TanggalKonsul", y="GDP", color="NoERM", hover_name=f"GDP/GDS : {"GDP"}/ {"GDS"}",
+        #                             labels={"GDP": "GDP (Diabetes)"}, title="Grafik Data Diabetes",
+        #                             template="plotly_white", hover_data={"hover_text": True})   
+        #     fig_diabetes.update_traces(mode="markers+lines", marker=dict(size=10))
+        #     fig_diabetes.update_layout(showlegend=True)
+        #     st.plotly_chart(fig_diabetes)
+
+        #buat graph dulu untuk dibates 
+        # Plotting data diabetes
+        if not diabetes_data.empty:
+      
+            diabetes_data['hover_text_diabetes'] = diabetes_data.apply(create_hover_text_diabetes, axis=1)
+
+            st.subheader("Grafik Data Diabetes")
+            fig_diabetes = px.scatter(diabetes_data, x="TanggalKonsul", y="GDP", color="NoERM", hover_name="GDP",
+                                        labels={"GDP": "GDP (Diabetes)"}, title="Grafik Data Diabetes",
+                                        template="plotly_white", hover_data={"hover_text_diabetes": True})   
+            fig_diabetes.update_traces(mode="markers+lines", marker=dict(size=10))
+            fig_diabetes.update_layout(showlegend=True)
+            st.plotly_chart(fig_diabetes)
+
+
+
+
+        if not hipertensi_data.empty:
+            hipertensi_data[['TDS', 'TDD']] = hipertensi_data['TD'].str.split('/', expand=True)
+
+            # Mengonversi nilai menjadi numerik untuk pengurutan yang benar
+            hipertensi_data['TDS'] = pd.to_numeric(hipertensi_data['TDS'])
+            hipertensi_data['TDD'] = pd.to_numeric(hipertensi_data['TDD'])
+            st.subheader("Grafik Data Hipertensi")
+            fig_hipertensi = px.scatter(hipertensi_data, x="TanggalKonsul", y="TDS", color="NoERM",
+                                        labels={"TDS": "TDS", "TDD": "TDD"}, 
+                                        title="Grafik Data Hipertensi", template="plotly_white",
+                                        hover_name="TD", hover_data={"hover_text": True})
+            fig_hipertensi.update_traces(mode="markers+lines", marker=dict(size=10))
+            fig_hipertensi.update_layout(showlegend=True, hoverlabel=dict(font=dict(size=16)))
+            st.plotly_chart(fig_hipertensi)
+        # Membuat plot dengan informasi sebelum dan setelah "/" pada sumbu y dan legenda yang sesuai
+        # if not hipertensi_data.empty:
+        #     st.subheader("Grafik Data Hipertensi")
+        #     fig_hipertensi = px.scatter(hipertensi_data, x="TanggalKonsul", y="TDS", color="NoERM",
+        #                                 labels={"TDS": "TDS", "TDD": "TDD"}, 
+        #                                 title="Grafik Data Hipertensi", template="plotly_white",
+        #                                 hover_name="TD")
+        #     fig_hipertensi.update_traces(mode="markers+lines", marker=dict(size=10))
+        #     fig_hipertensi.update_layout(showlegend=True)
+        #     st.plotly_chart(fig_hipertensi)
+        # # Plotting data hipertensi
+        # if not hipertensi_data.empty:
+        #     st.subheader("Grafik Data Hipertensi")
+        #     fig_hipertensi = px.scatter(hipertensi_data, x="TanggalKonsul", y="TD", color="NoERM", hover_name="NoERM",
+        #                                 labels={"TD": "TD (Hipertensi)"}, title="Grafik Data Hipertensi",
+        #                                 template="plotly_white")
+        #     fig_hipertensi.update_traces(mode="markers+lines", marker=dict(size=10))
+        #     fig_hipertensi.update_layout(showlegend=True)
+        #     st.plotly_chart(fig_hipertensi)
+
+
+
+
+
+
+
+        #BATASSSSSSSSSSSSSSSSSSSS
+
+        # if filtered_data['Jenis Penyakit'].iloc[0].values == "Diabetes":
+        #     #filter data -> jadi filtered data untuk diabetes
+            
+        #     # Line chart based on filtered data
+        #     if not filtered_data.empty:
+        #        # st.subheader("Years in Business Over Time (Filtered)")
+        #         plt.figure(figsize=(10, 6))
+
+        #         # Plot GDP
+        #         plt.plot(filtered_data["TanggalKonsul"], filtered_data["GDP"], marker='o', color='blue', label='GDP')
                 
-                # Plot GDS
-                plt.plot(filtered_data["TanggalKonsul"], filtered_data["GDS"], marker='o', color='green', label='GDS')
+        #         # Plot GDS
+        #         plt.plot(filtered_data["TanggalKonsul"], filtered_data["GDS"], marker='o', color='green', label='GDS')
 
-                plt.xlabel("Tanggal Konsul")
-                plt.ylabel("Nilai")
-                #plt.title("Years in Business Over Time (Filtered)")
-                plt.xticks(rotation=45)
-                plt.legend()  # Menampilkan legenda
+        #         plt.xlabel("Tanggal Konsul")
+        #         plt.ylabel("Nilai")
+        #         #plt.title("Years in Business Over Time (Filtered)")
+        #         plt.xticks(rotation=45)
+        #         plt.legend()  # Menampilkan legenda
 
-                st.set_option('deprecation.showPyplotGlobalUse', False)
-                st.pyplot()
-            else:
-                st.info("No data available for the provided filter.")
-        else: 
-               # Line chart based on filtered data
-            if not filtered_data.empty:
-              #  st.subheader("Years in Business Over Time (Filtered)")
-                plt.figure(figsize=(10, 6))
+        #         st.set_option('deprecation.showPyplotGlobalUse', False)
+        #         st.pyplot()
+        #     else:
+        #         st.info("No data available for the provided filter.")
+        # #else: 
+        # #buat graph untuk hipertensi
+        # if filtered_data['Jenis Penyakit'].iloc[0].values == "Hipertensi":
+        #        # Line chart based on filtered data
+        #     if not filtered_data.empty:
+        #       #  st.subheader("Years in Business Over Time (Filtered)")
+        #         plt.figure(figsize=(10, 6))
 
-                # Plot GDP
-                plt.plot(filtered_data["TanggalKonsul"], filtered_data["GDP"], marker='o', color='blue', label='GDP')
+        #         # Plot GDP
+        #         plt.plot(filtered_data["TanggalKonsul"], filtered_data["GDP"], marker='o', color='blue', label='GDP')
                 
-                # Plot GDS
-                plt.plot(filtered_data["TanggalKonsul"], filtered_data["TD"], marker='o', color='green', label='GDS')
+        #         # Plot GDS
+        #         plt.plot(filtered_data["TanggalKonsul"], filtered_data["TD"], marker='o', color='green', label='GDS')
 
-                plt.xlabel("Tanggal Konsul")
-                plt.ylabel("Nilai")
-                #plt.title("Years in Business Over Time (Filtered)")
-                plt.xticks(rotation=45)
-                plt.legend()  # Menampilkan legenda
+        #         plt.xlabel("Tanggal Konsul")
+        #         plt.ylabel("Nilai")
+        #         #plt.title("Years in Business Over Time (Filtered)")
+        #         plt.xticks(rotation=45)
+        #         plt.legend()  # Menampilkan legenda
 
-                st.set_option('deprecation.showPyplotGlobalUse', False)
-                st.pyplot()
-            else:
-                st.info("No data available for the provided filter.")
+        #         st.set_option('deprecation.showPyplotGlobalUse', False)
+        #         st.pyplot()
+        #     else:
+        #         st.info("No data available for the provided filter.")
       #  st.form(key="filter_form").clear()
