@@ -329,8 +329,8 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
         if st.session_state.my_variable_state3 >= 1:
             print("la: " + st.no_erm_input)
             print("du:" + existing_pasien_data["NoERM"])
-            st.pasien_data = existing_pasien_data.loc[existing_pasien_data["NoERM"] == st.no_erm_input+"x"].iloc[0]
-            
+            #st.pasien_data = existing_pasien_data.loc[existing_pasien_data["NoERM"] == st.no_erm_input+"x"].iloc[0]
+            st.pasien_data = existing_pasien_data.loc[existing_pasien_data["NoERM"] == st.no_erm_input+"x"]
             existing_data_pasien_penyakit = conn.read(worksheet="penyakit_pasien", usecols=list(range(10)), ttl=5)
             existing_data_pasien_penyakit = existing_data_pasien_penyakit.dropna(how="all")
             if st.session_state.my_variable_state3 >= 1:
