@@ -180,7 +180,7 @@ if selected == "Input Data Pasien":
             pasien_data = pd.DataFrame(
                 {
                     "Nama": [nama],
-                    "NoERM": [no_erm + 'x'],
+                    "NoERM": [no_erm ],
                     "TempatLahir": [tempat_lahir],  
                     "TanggalLahir": [tanggal_lahir.strftime("%Y-%m-%d")],
                     "JenisKelamin": [jenis_kelamin],
