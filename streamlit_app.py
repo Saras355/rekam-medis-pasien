@@ -335,6 +335,8 @@ elif selected in ["Input Data Diabetes", "Input Data Hipertensi"]:
             st.pasien_data = existing_pasien_data.loc[existing_pasien_data["NoERM"] == st.no_erm_input+"x"]
             existing_data_pasien_penyakit = conn.read(worksheet="penyakit_pasien", usecols=list(range(10)), ttl=5)
             existing_data_pasien_penyakit = existing_data_pasien_penyakit.dropna(how="all")
+            st.write(st.pasien_data)
+            st.write(existing_data_pasien_penyakit)
             if st.session_state.my_variable_state3 >= 1:
                 with st.form (key = "form_final", clear_on_submit= False):
                     st.write("**Langkah 4. Submit Data Final**")
