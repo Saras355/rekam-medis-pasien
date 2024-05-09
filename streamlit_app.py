@@ -42,6 +42,8 @@ def tampilkan_dashboard():
     # Ambil data penyakit_pasien dari Google Sheets
     existing_data = conn.read(worksheet="penyakit_pasien", usecols=list(range(11)), ttl=5)
     existing_data = existing_data.dropna(how="all")
+    st.write(existing_data)
+    st.write("muncul")
 
     if not existing_data.empty:
         # Filter data berdasarkan bulan dan tahun yang diinginkan (misalnya, bulan April 2024)
@@ -170,8 +172,8 @@ if selected == "Input Data Pasien":
                 st.stop()
             # Validasi NoERM unik
             no_erm = no_erm + "x"
-            st.write(no_erm)
-            st.write(existing_pasien_data["NoERM"].values)
+            # st.write(no_erm)
+            # st.write(existing_pasien_data["NoERM"].values)
             if no_erm in existing_pasien_data["NoERM"].values:
                 st.warning("Nomor pasien sudah ada dalam basis data. Harap masukkan nomor pasien yang unik.")
                 st.stop()
