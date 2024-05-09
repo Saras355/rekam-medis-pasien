@@ -42,8 +42,8 @@ def tampilkan_dashboard():
     # Ambil data penyakit_pasien dari Google Sheets
     existing_data = conn.read(worksheet="penyakit_pasien", usecols=list(range(11)), ttl=5)
     existing_data = existing_data.dropna(how="all")
-    st.write(existing_data)
-    st.write("muncul")
+    # st.write(existing_data)
+    # st.write("muncul")
 
     if not existing_data.empty:
         # Filter data berdasarkan bulan dan tahun yang diinginkan (misalnya, bulan April 2024)
@@ -61,52 +61,52 @@ def tampilkan_dashboard():
         #hitung total yang diabetes
 
         #hitung total yang hipertensi
-        if not filtered_data.empty:
-            #hitung total yang diabetes
-            total_diabetes = len(filtered_data[filtered_data["Jenis Penyakit"] == "Diabetes"])
+        
+        #hitung total yang diabetes
+        total_diabetes = len(filtered_data[filtered_data["Jenis Penyakit"] == "Diabetes"])
 
-            #hitung yang hipertensi
-            total_hipertensi = len(filtered_data[filtered_data["Jenis Penyakit"] == "Hipertensi"])
-            # Filter data untuk pasien Diabetes dengan GDP/GDS antara 80-130
-            #st.write(total_hipertensi)
-            diabetes_data = filtered_data[(filtered_data["Jenis Penyakit"] == "Diabetes") & ((filtered_data["GDP"] >= 80) & (filtered_data["GDP"] <= 130) | (filtered_data["GDS"] >= 80) & (filtered_data["GDS"] <= 130))]
-            # st.write(diabetes_data)
-            if total_diabetes:
-            # Hitung persentase pasien Diabetes yang memenuhi kriteria
-                diabetes_percentage = len(diabetes_data) /total_diabetes * 100
-                # st.write(diabetes_percentage)
-            else:
-                diabetes_percentage = 0
-            # Filter data untuk pasien Hipertensi dengan TD < 140
-            filtered_data["TD"] = filtered_data["TD"].apply(lambda x: int(x.split("/")[0]) if isinstance(x, str) else x)
-            hipertensi_data = filtered_data[(filtered_data["Jenis Penyakit"] == "Hipertensi") & ((filtered_data["TD"] < 140))]
-            # st.write(hipertensi_data)
-            if total_hipertensi:
-                # Hitung persentase pasien Hipertensi yang memenuhi kriteria
-                hipertensi_percentage = len(hipertensi_data) / total_hipertensi * 100
-                
-                # st.write(hipertensi_percentage)
-            else:
-                hipertensi_percentage = 0
-            # Tampilkan hasil dalam bentuk grafik
-         #   st.markdown(f"**Capaian untuk bulan {target_month} tahun {target_year} :**")
-            st.write(f"**Persentase Pasien yang Memenuhi Kriteria di Bulan {target_month}/{target_year}:**")
+        #hitung yang hipertensi
+        total_hipertensi = len(filtered_data[filtered_data["Jenis Penyakit"] == "Hipertensi"])
+        # Filter data untuk pasien Diabetes dengan GDP/GDS antara 80-130
+        #st.write(total_hipertensi)
+        diabetes_data = filtered_data[(filtered_data["Jenis Penyakit"] == "Diabetes") & ((filtered_data["GDP"] >= 80) & (filtered_data["GDP"] <= 130) | (filtered_data["GDS"] >= 80) & (filtered_data["GDS"] <= 130))]
+        # st.write(diabetes_data)
+        if total_diabetes:
+        # Hitung persentase pasien Diabetes yang memenuhi kriteria
+            diabetes_percentage = len(diabetes_data) /total_diabetes * 100
+            # st.write(diabetes_percentage)
+        else:
+            diabetes_percentage = 0
+        # Filter data untuk pasien Hipertensi dengan TD < 140
+        filtered_data["TD"] = filtered_data["TD"].apply(lambda x: int(x.split("/")[0]) if isinstance(x, str) else x)
+        hipertensi_data = filtered_data[(filtered_data["Jenis Penyakit"] == "Hipertensi") & ((filtered_data["TD"] < 140))]
+        # st.write(hipertensi_data)
+        if total_hipertensi:
+            # Hitung persentase pasien Hipertensi yang memenuhi kriteria
+            hipertensi_percentage = len(hipertensi_data) / total_hipertensi * 100
+            
+            # st.write(hipertensi_percentage)
+        else:
+            hipertensi_percentage = 0
+        # Tampilkan hasil dalam bentuk grafik
+     #   st.markdown(f"**Capaian untuk bulan {target_month} tahun {target_year} :**")
+        st.write(f"**Persentase Pasien yang Memenuhi Kriteria di Bulan {target_month}/{target_year}:**")
 
-            columns = st.columns(2)
+        columns = st.columns(2)
 
-            if total_diabetes:
-                columns[0].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>{diabetes_percentage:.2f}%</div>", unsafe_allow_html=True)
-                columns[0].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Diabetes dengan GDP/GDS 80-130</div>", unsafe_allow_html=True)
-            else:
-                columns[0].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'> -- </div>", unsafe_allow_html=True)
-                columns[0].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Diabetes dengan GDP/GDS 80-130</div>", unsafe_allow_html=True)
+        if total_diabetes:
+            columns[0].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>{diabetes_percentage:.2f}%</div>", unsafe_allow_html=True)
+            columns[0].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Diabetes dengan GDP/GDS 80-130</div>", unsafe_allow_html=True)
+        else:
+            columns[0].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'> -- </div>", unsafe_allow_html=True)
+            columns[0].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Diabetes dengan GDP/GDS 80-130</div>", unsafe_allow_html=True)
 
-            if total_hipertensi:
-                columns[1].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>{hipertensi_percentage:.2f}%</div>", unsafe_allow_html=True)
-                columns[1].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Hipertensi dengan TDS < 140</div>", unsafe_allow_html=True)
-            else:
-                columns[1].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'> --- </div>", unsafe_allow_html=True)
-                columns[1].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Hipertensi dengan TDS < 140</div>", unsafe_allow_html=True)
+        if total_hipertensi:
+            columns[1].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>{hipertensi_percentage:.2f}%</div>", unsafe_allow_html=True)
+            columns[1].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Hipertensi dengan TDS < 140</div>", unsafe_allow_html=True)
+        else:
+            columns[1].write(f"<div style='font-size:24px; background-color: #FFCCCC; padding: 10px; border-radius: 5px;'> --- </div>", unsafe_allow_html=True)
+            columns[1].write("<div style='background-color: #FFCCCC; padding: 10px; border-radius: 5px;'>Pasien Hipertensi dengan TDS < 140</div>", unsafe_allow_html=True)
     st.write()
 
 if selected == "Input Data Pasien":
