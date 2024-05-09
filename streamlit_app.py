@@ -192,8 +192,8 @@ if selected == "Input Data Pasien":
                 st.stop()
             # Validasi NoERM unik
             no_erm = no_erm + "x"
-            # st.write(no_erm)
-            # st.write(existing_pasien_data["NoERM"].values)
+            # #st.write(no_erm)
+            # #st.write(existing_pasien_data["NoERM"].values)
             if no_erm in existing_pasien_data["NoERM"].values:
                 st.warning("Nomor pasien sudah ada dalam basis data. Harap masukkan nomor pasien yang unik.")
                 st.stop()
