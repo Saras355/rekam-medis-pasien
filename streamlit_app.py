@@ -582,27 +582,30 @@ elif selected == "Cari Rekam Medis":
 
         #filtered hanya ambil yang tanggalnya terbaru -> 4 bulan terakhir
 
-        #kode buat ambil bulan ini
-        # Filter data berdasarkan bulan dan tahun yang diinginkan (misalnya, bulan April 2024)
-        current_month = datetime.datetime.now().month
-        current_year = datetime.datetime.now().year
+        diabetes_data = diabetes_data.head(4)
+        hipertensi_data = hipertensi_data.head(4)
 
-        #target motnhnya dalam rentang waktu 4 bulan terakhir
-        diabetes_data['TanggalKonsul'] = pd.to_datetime(diabetes_data['TanggalKonsul'])
-        hipertensi_data['TanggalKonsul'] = pd.to_datetime(hipertensi_data['TanggalKonsul'])
-        # target_month = current_month - 1 
-        four_months_ago = datetime.datetime.now() - relativedelta(months=3, days=datetime.datetime.now().day-1)
+        # #kode buat ambil bulan ini
+        # # Filter data berdasarkan bulan dan tahun yang diinginkan (misalnya, bulan April 2024)
+        # current_month = datetime.datetime.now().month
+        # current_year = datetime.datetime.now().year
+
+        # #target motnhnya dalam rentang waktu 4 bulan terakhir
+        # diabetes_data['TanggalKonsul'] = pd.to_datetime(diabetes_data['TanggalKonsul'])
+        # hipertensi_data['TanggalKonsul'] = pd.to_datetime(hipertensi_data['TanggalKonsul'])
+        # # target_month = current_month - 1 
+        # four_months_ago = datetime.datetime.now() - relativedelta(months=3, days=datetime.datetime.now().day-1)
 
 
 
 
-        target_year = current_year
-        # if target_month == 0:
-        #     target_month = 12  
-        #     target_year -= 1 
-        # #filtered baik utnuk data diabetes dan hipertensi based dari target_month dan target_year
-        diabetes_data = diabetes_data[(diabetes_data["TanggalKonsul"] >= four_months_ago) & (diabetes_data["TanggalKonsul"].dt.year == datetime.datetime.now().year)]
-        hipertensi_data = hipertensi_data[(hipertensi_data["TanggalKonsul"] >= four_months_ago) & (hipertensi_data["TanggalKonsul"].dt.year == datetime.datetime.now().year)]
+        # target_year = current_year
+        # # if target_month == 0:
+        # #     target_month = 12  
+        # #     target_year -= 1 
+        # # #filtered baik utnuk data diabetes dan hipertensi based dari target_month dan target_year
+        # diabetes_data = diabetes_data[(diabetes_data["TanggalKonsul"] >= four_months_ago) & (diabetes_data["TanggalKonsul"].dt.year == datetime.datetime.now().year)]
+        # hipertensi_data = hipertensi_data[(hipertensi_data["TanggalKonsul"] >= four_months_ago) & (hipertensi_data["TanggalKonsul"].dt.year == datetime.datetime.now().year)]
 
 
         #buat tooltip
@@ -623,6 +626,8 @@ elif selected == "Cari Rekam Medis":
 
         #buat graph dulu untuk dibates 
         # Plotting data diabetes
+        # st.write(diabetes_data)
+        # st.write(hipertensi_data)
         if not diabetes_data.empty:
       
             diabetes_data['hover_text_diabetes'] = diabetes_data.apply(create_hover_text_diabetes, axis=1)
