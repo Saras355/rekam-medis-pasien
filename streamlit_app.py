@@ -568,7 +568,7 @@ elif selected == "Cari Rekam Medis":
 
     # filtered_data = existing_data[(existing_data["Nama"].str.contains(filter_name)) and (existing_data["NoERM"].str.contains(filter_no_erm))]
         filtered_data = existing_data[(existing_data["Nama"].str.contains(filter_name)) &(existing_data["NoERM"].astype(str).str.contains(filter_no_erm))]
-        filtered_data = filtered_data.sort_values(by="TanggalKonsul", ascending=False).head(7)
+        filtered_data = filtered_data.sort_values(by="TanggalKonsul", ascending=False).head(4)
     #filtered_data = existing_data[(existing_data["Nama"].str.contains(filter_name))]
         #filtered_data = existing_data[(existing_data["NoERM"].astype(str).str.contains(filter_no_erm))]
         # Display existing vendors data filtered by company_name
@@ -582,8 +582,8 @@ elif selected == "Cari Rekam Medis":
 
         #filtered hanya ambil yang tanggalnya terbaru -> 4 bulan terakhir
 
-        diabetes_data = diabetes_data.head(4)
-        hipertensi_data = hipertensi_data.head(4)
+        # diabetes_data = diabetes_data.head(4)
+        # hipertensi_data = hipertensi_data.head(4)
 
         # #kode buat ambil bulan ini
         # # Filter data berdasarkan bulan dan tahun yang diinginkan (misalnya, bulan April 2024)
