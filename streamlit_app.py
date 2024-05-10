@@ -609,7 +609,7 @@ elif selected == "Cari Rekam Medis":
 
 
         #buat tooltip
-        hipertensi_data['hover_text'] = hipertensi_data.apply(create_hover_text, axis=1)
+    
         #diabetes_data['hover_text'] = diabetes_data.apply(create_hover_text, axis=1)
 
         #buat graph dulu untuk dibates 
@@ -644,6 +644,7 @@ elif selected == "Cari Rekam Medis":
 
 
         if not hipertensi_data.empty:
+            hipertensi_data['hover_text'] = hipertensi_data.apply(create_hover_text, axis=1)
             hipertensi_data[['TDS', 'TDD']] = hipertensi_data['TD'].str.split('/', expand=True)
 
             # Mengonversi nilai menjadi numerik untuk pengurutan yang benar
